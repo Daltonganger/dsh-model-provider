@@ -24,6 +24,9 @@ Try opening the dropdown (still tidy even with many models):
                                      🔍 Search opencode-go models         └─ GLM-5.1
                                         (current provider only)
 
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/6fb97a93-43f7-4d05-b9bb-dc77273759f9" />
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/e011060a-56d9-4744-ab76-359aab52f75e" />
+
 - **Provider is its own level**: the provider list pins the **current provider** to the top and marks it "· current"; the rest keep catalog order. The Model page renders only the selected provider's models — no more provider × model flattening.
 - **Failed providers are a row too**: a provider that failed to load no longer lives only in a warning banner — it is a normal Provider row ("failed ⚠ retry") that reloads on click.
 - **Search (v0.3)**: both the Provider and Model pages have an inline search box — Provider page filters providers by name/ID; Model page filters only the **current provider's** models (no cross-provider search).
