@@ -1,13 +1,14 @@
 {
   "name": "dsh-model-provider",
-  "version": "0.1.0",
-  "description": "Show each model's provider in the DeepSeek Harness model selector: provider-qualified composer model seat, providerId:modelId identity, and the provider-grouped catalog.",
+  "version": "0.2.0",
+  "description": "Provider-first model selector for the DeepSeek Harness model seat: pick a provider, then a model from that provider — current model always shows Model · Provider.",
   "keywords": [
     "deepseek-harness",
     "dsh",
     "plugin",
     "model-selector",
     "provider",
+    "provider-first",
     "client-ui"
   ],
   "type": "module",

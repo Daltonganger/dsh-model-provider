@@ -1,24 +1,29 @@
 /**
  * dsh-model-provider — client half.
  *
- * Provider-aware model seat for the DeepSeek Harness web GUI.
+ * Provider-first model selector for the DeepSeek Harness web GUI.
  *
- * The harness already groups the model catalog by provider in the dropdown
- * (sticky group titles) and keys every selection as { provider, model }, so
- * this plugin's only real gap is the *composer model seat*: the trigger shows
- * the bare model name (+ reasoning effort) with no way to tell which provider
- * the same-named model came from. This entry registers a shadowing component
- * into the single "conversation.input.model" slot at priority -1 (lowest
- * renders), re-implementing the original seat over the SAME per-session
- * ModelDirectory service so selection semantics are untouched, and renders
- * "Model · Provider" in the trigger. Disposing this registration (plugin off)
- * restores the original seat automatically.
+ * The harness already groups the model catalog by provider and keys every
+ * selection as { provider, model }, but the original composer model seat
+ * flattens the whole catalog provider-by-provider, so with many providers the
+ * dropdown turns into one very long list. This plugin shadows the single
+ * "conversation.input.model" slot at priority -1 (lowest renders) with a
+ * three-level selector over the SAME per-session ModelDirectory service:
+ *
+ *   root    → 模型 / 推理等级
+ *   provider → one row per provider (current provider first, “当前” marker)
+ *   model    → only the models of the selected provider
+ *
+ * Selection semantics, session state and the harness RPC are untouched; only
+ * the surface changes. Disposing this registration (plugin off) restores the
+ * original seat automatically.
  */
 
 import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   IconCheckOutline16,
   IconChevronDownOutline14,
+  IconChevronLeftOutline14,
   IconChevronRightOutline14,
   IconWarningOutline16,
   Toast
@@ -127,6 +132,10 @@ const zh = {
   "menu.aria": "模型与推理等级",
   "menu.model": "模型",
   "menu.effort": "推理等级",
+  "provider.header": "选择供应商",
+  "provider.models": "{count} 个模型",
+  "provider.current": "当前",
+  "provider.aria": "{name}，{meta}",
   "effort.providerDefault": "Default",
   "status.loading": "正在刷新模型列表…",
   "error.action": "模型操作失败：{message}",
@@ -145,6 +154,10 @@ const en = {
   "menu.aria": "Model and reasoning effort",
   "menu.model": "Model",
   "menu.effort": "Effort",
+  "provider.header": "Select provider",
+  "provider.models": "{count} models",
+  "provider.current": "current",
+  "provider.aria": "{name}, {meta}",
   "effort.providerDefault": "Default",
   "status.loading": "Refreshing model list…",
   "error.action": "Model operation failed: {message}",
@@ -156,24 +169,31 @@ const en = {
 };
 
 // ---------------------------------------------------------------------------
-// ModelProviderSelect — drop-in replacement for the composer model seat
+// ModelProviderSelect — three-level, provider-first model selector
 // ---------------------------------------------------------------------------
 
 /**
  * Composer model seat with provider visibility. Identical behavior to the
- * harness seat (two-level menu, shared per-session directory, same selection
- * RPC) — only the trigger and option tooltips add the provider.
+ * harness seat (shared per-session directory, same selection RPC, keyboard
+ * navigation) — the surface is a three-level menu instead of one flattened
+ * provider-grouped list:
+ *
+ *   root      – 模型 (→ providers) / 推理等级 (→ efforts)
+ *   provider  – one row per provider; current provider first, marked “当前”
+ *   model     – only the selected provider's models
  */
 function ModelProviderSelect({ locked, available, directory, load, select, t }: ModelProviderSelectProps) {
   const state = useSyncExternalStore((fn) => directory.subscribe(fn), () => directory.getSnapshot());
   const [open, setOpen] = useState(false);
-  const [pane, setPane] = useState<"root" | "model" | "effort">("root");
+  const [pane, setPane] = useState<"root" | "provider" | "model" | "effort">("root");
+  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const lastActionRef = useRef<"load" | "select">("load");
   const [toast, setToast] = useState<{ seq: number; text: string } | null>(null);
   const toastSeq = useRef(0);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const paneRef = useRef(pane);
   const id = useId();
 
   const choices = useMemo(
@@ -249,6 +269,23 @@ function ModelProviderSelect({ locked, available, directory, load, select, t }: 
     [reasoning, t]
   );
 
+  // Provider list for the second pane: current provider pinned first, the
+  // rest in catalog order.
+  const providerGroups = useMemo(() => {
+    const currentId = state.current?.provider;
+    if (currentId === void 0) return state.groups;
+    return [...state.groups].sort((a, b) => {
+      if (a.id === currentId) return -1;
+      if (b.id === currentId) return 1;
+      return 0;
+    });
+  }, [state.groups, state.current?.provider]);
+
+  const activeProviderGroup = useMemo(
+    () => state.groups.find((group) => group.id === selectedProvider),
+    [state.groups, selectedProvider]
+  );
+
   const busy = state.status === "selecting";
   const reload = () => {
     lastActionRef.current = "load";
@@ -261,6 +298,15 @@ function ModelProviderSelect({ locked, available, directory, load, select, t }: 
       load();
     }
   }, [available, load]);
+
+  // When the pane changes (not on first open), move focus to the first option
+  // of the new pane so keyboard users can keep walking the list with arrows.
+  useEffect(() => {
+    if (open && paneRef.current !== pane) {
+      itemRefs.current.find((item): item is HTMLButtonElement => item !== null)?.focus();
+    }
+    paneRef.current = pane;
+  }, [pane, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -297,8 +343,14 @@ function ModelProviderSelect({ locked, available, directory, load, select, t }: 
   const onRootKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === "Escape" && open) {
       event.preventDefault();
-      if (pane !== "root") setPane("root");
-      else close(true);
+      if (pane === "model") {
+        // Model list → provider list → root menu → close, one level at a time.
+        setPane("provider");
+      } else if (pane === "provider" || pane === "effort") {
+        setPane("root");
+      } else {
+        close(true);
+      }
       return;
     }
     if (!open) return;
@@ -354,6 +406,32 @@ function ModelProviderSelect({ locked, available, directory, load, select, t }: 
     };
   };
 
+  // Directory-level loading/error/warnings shown on the provider and model
+  // panes (the only panes that browse the catalog).
+  const statusBlock = (
+    <>
+      {state.status === "loading" && <div className="dshmp-status">{t("status.loading")}</div>}
+      {state.error !== null && lastActionRef.current === "load" && (
+        <div className="dshmp-error">
+          <span>{t("error.action", { message: state.error })}</span>
+          <button type="button" className="dshmp-retry" onClick={reload}>
+            {t("retry")}
+          </button>
+        </div>
+      )}
+      {state.failures.map((failure) => (
+        <div className="dshmp-warning" key={failure.id}>
+          <span>
+            {t("warning.groupLoad", { name: failure.name, message: failure.message })}
+          </span>
+          <button type="button" className="dshmp-retry" onClick={reload}>
+            {t("retry")}
+          </button>
+        </div>
+      ))}
+    </>
+  );
+
   return (
     <div ref={rootRef} className="dshmp-root" onKeyDown={onRootKeyDown} onBlur={onBlur}>
       <button
@@ -393,7 +471,8 @@ function ModelProviderSelect({ locked, available, directory, load, select, t }: 
                 role="menuitem"
                 className="dshmp-cell"
                 onClick={() => {
-                  setPane("model");
+                  setSelectedProvider(null);
+                  setPane("provider");
                 }}
               >
                 <span className="dshmp-cellLabel">{t("menu.model")}</span>
@@ -418,76 +497,124 @@ function ModelProviderSelect({ locked, available, directory, load, select, t }: 
             </>
           )}
 
-          {pane === "model" && (
+          {pane === "provider" && (
             <>
-              {state.status === "loading" && <div className="dshmp-status">{t("status.loading")}</div>}
-              {state.error !== null && lastActionRef.current === "load" && (
-                <div className="dshmp-error">
-                  <span>{t("error.action", { message: state.error })}</span>
-                  <button type="button" className="dshmp-retry" onClick={reload}>
-                    {t("retry")}
-                  </button>
-                </div>
-              )}
-              {state.failures.map((failure) => (
-                <div className="dshmp-warning" key={failure.id}>
-                  <span>
-                    {t("warning.groupLoad", { name: failure.name, message: failure.message })}
-                  </span>
-                  <button type="button" className="dshmp-retry" onClick={reload}>
-                    {t("retry")}
-                  </button>
-                </div>
-              ))}
+              <button
+                type="button"
+                className="dshmp-back"
+                onClick={() => {
+                  setPane("root");
+                }}
+              >
+                <IconChevronLeftOutline14 />
+                <span className="dshmp-backLabel">{t("provider.header")}</span>
+              </button>
+              {statusBlock}
               <div className={cx("dshmp-groups", "scrollable")}>
-                {state.groups.map((group) => {
-                  const headingId = `${id}-${group.id}`;
+                {providerGroups.map((group) => {
+                  const isCurrent = state.current?.provider === group.id;
+                  const metaText = t("provider.models", { count: group.models.length });
                   return (
-                    <section
-                      role="group"
-                      aria-labelledby={headingId}
-                      className="dshmp-group"
-                      key={group.id}
-                    >
-                      <div className="dshmp-groupTitle" id={headingId}>
-                        {group.name}
-                      </div>
-                      {group.models.map((model) => {
-                        const selected =
-                          state.current?.provider === group.id && state.current.model === model.id;
-                        return (
-                          <button
-                            ref={itemRef()}
-                            type="button"
-                            role="menuitemradio"
-                            aria-checked={selected}
-                            className={cx("dshmp-option", selected && "dshmp-selected")}
-                            title={`${model.name} · ${group.name}`}
-                            disabled={busy}
-                            key={model.id}
-                            onClick={() => {
-                              choose({ provider: group.id, model: model.id });
-                            }}
-                          >
-                            <span className="dshmp-optionCopy">
-                              <span className="dshmp-modelName">{model.name}</span>
-                              {model.description !== void 0 && (
-                                <span className="dshmp-description">{model.description}</span>
-                              )}
-                            </span>
-                            <span className="dshmp-check">
-                              {selected ? <IconCheckOutline16 /> : null}
-                            </span>
-                          </button>
-                        );
+                    <button
+                      ref={itemRef()}
+                      type="button"
+                      role="menuitem"
+                      aria-label={t("provider.aria", {
+                        name: group.name,
+                        meta: isCurrent ? `${metaText} · ${t("provider.current")}` : metaText
                       })}
-                    </section>
+                      className={cx("dshmp-option", isCurrent && "dshmp-providerActive")}
+                      key={group.id}
+                      onClick={() => {
+                        setSelectedProvider(group.id);
+                        setPane("model");
+                      }}
+                    >
+                      <span className="dshmp-optionCopy">
+                        <span className="dshmp-modelName">{group.name}</span>
+                        <span className="dshmp-description">
+                          {metaText}
+                          {isCurrent && (
+                            <span className="dshmp-providerCurrent"> · {t("provider.current")}</span>
+                          )}
+                        </span>
+                      </span>
+                      <span className="dshmp-cellChevron">
+                        <IconChevronRightOutline14 />
+                      </span>
+                    </button>
                   );
                 })}
               </div>
-              {state.status === "ready" && choices.length === 0 && (
+              {state.status === "ready" && providerGroups.length === 0 && (
                 <div className="dshmp-empty">{t("empty.models")}</div>
               )}
+            </>
+          )}
+
+          {pane === "model" && activeProviderGroup !== void 0 && (
+            <>
+              <button
+                type="button"
+                className="dshmp-back"
+                onClick={() => {
+                  setPane("provider");
+                }}
+              >
+                <IconChevronLeftOutline14 />
+                <span className="dshmp-backLabel">{activeProviderGroup.name}</span>
+              </button>
+              {statusBlock}
+              <div className={cx("dshmp-groups", "scrollable")}>
+                {activeProviderGroup.models.map((model) => {
+                  const selected =
+                    state.current?.provider === activeProviderGroup.id && state.current.model === model.id;
+                  return (
+                    <button
+                      ref={itemRef()}
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={selected}
+                      className={cx("dshmp-option", selected && "dshmp-selected")}
+                      title={`${model.name} · ${activeProviderGroup.name}`}
+                      disabled={busy}
+                      key={model.id}
+                      onClick={() => {
+                        choose({ provider: activeProviderGroup.id, model: model.id });
+                      }}
+                    >
+                      <span className="dshmp-optionCopy">
+                        <span className="dshmp-modelName">{model.name}</span>
+                        {model.description !== void 0 && (
+                          <span className="dshmp-description">{model.description}</span>
+                        )}
+                      </span>
+                      <span className="dshmp-check">
+                        {selected ? <IconCheckOutline16 /> : null}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              {activeProviderGroup.models.length === 0 && (
+                <div className="dshmp-empty">{t("empty.models")}</div>
+              )}
+            </>
+          )}
+
+          {pane === "model" && activeProviderGroup === void 0 && (
+            <>
+              <button
+                type="button"
+                className="dshmp-back"
+                onClick={() => {
+                  setPane("provider");
+                }}
+              >
+                <IconChevronLeftOutline14 />
+                <span className="dshmp-backLabel">{t("menu.model")}</span>
+              </button>
+              <div className="dshmp-empty">{t("empty.models")}</div>
             </>
           )}
 
@@ -571,7 +698,7 @@ export const inject = ["locale", "sessions", "slots", "modelDirectories"];
 
 /**
  * Client plugin body: register this plugin's dictionaries, then shadow the
- * composer model seat with the provider-qualified re-implementation.
+ * composer model seat with the provider-first re-implementation.
  */
 export function apply(ctx: any) {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), "dsh-model-provider: dictionaries");
