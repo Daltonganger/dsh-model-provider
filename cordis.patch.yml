@@ -1,0 +1,12 @@
+# dsh-model-provider — bundle patch layer.
+#
+# Installing this package into a profile (`dsh plugin --profile <name> add <path-or-git-url>`)
+# appends it to `dsh.profile.bundles`; this patch is then applied as that
+# bundle's layer. The single row mounts BOTH halves: the host half
+# (a plain Cordis plugin with an empty apply — this package is a pure
+# browser-surface plugin) and the browser half (`./client` bundle), the
+# latter discovered automatically from the `dsh.client` declaration in
+# package.json.
+- insert:
+    - id: model-provider
+      name: 'dsh-model-provider'
