@@ -1,7 +1,7 @@
 {
   "name": "dsh-model-provider",
-  "version": "0.2.0",
-  "description": "Provider-first model selector for the DeepSeek Harness model seat: pick a provider, then a model from that provider — current model always shows Model · Provider.",
+  "version": "0.3.0",
+  "description": "Provider-first model selector for the DeepSeek Harness model seat: pick a provider, then a model from that provider — current model always shows Model · Provider; search and hardening (v0.3).",
   "keywords": [
     "deepseek-harness",
     "dsh",
@@ -54,6 +54,14 @@
   },
   "scripts": {
     "build": "node build.mjs",
-    "watch": "node build.mjs --watch"
+    "watch": "node build.mjs --watch",
+    "test": "node --test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.0"
   }
 }

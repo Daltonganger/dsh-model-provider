@@ -1,12 +1,13 @@
 /**
- * dsh-model-provider — bundle builder.
+ * dsh-model-provider - bundle builder.
  *
  * Produces lib/client.js in the DeepSeek Harness client-plugin format:
  * window.__ModuleLoader__.load({ id, factory(require) => exports })
  *
- * Uses esbuild only for the JSX/TS transform (the harness bundles are compiled
- * with tsdown plus the dsh platform preset; this tiny script reproduces the
- * same observable output shape without pulling the whole toolchain).
+ * Uses esbuild to bundle src/client.tsx (declared devDependency) with the
+ * harness packages kept external, then rewrites the esm output into the
+ * harness module system (jsx-runtime + named imports become requires, exports
+ * become module.exports assignments). No machine-specific paths anywhere.
  */
 import { createRequire } from "node:module";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -17,27 +18,32 @@ const require = createRequire(import.meta.url);
 const here = dirname(fileURLToPath(import.meta.url));
 const ID = "dsh-model-provider";
 
+/** Harness packages are resolved by the host module loader at runtime. */
+const EXTERNAL = [
+  "react",
+  "react/jsx-runtime",
+  "@deepseek-ai/dsh-client-locale",
+  "@deepseek-ai/dsh-client-runtime",
+  "@deepseek-ai/dsh-client-ui-model-selection",
+  "@deepseek-ai/dsh-client-ui-primitives"
+];
+
 function resolveEsbuild() {
-  const candidates = [
-    "esbuild",
-    "/data/opt/dev/leoch/node_modules/esbuild",
-    "/data/opt/dev/leoch/node_modules/vite/node_modules/esbuild",
-    "/data/opt/dev/trace/node_modules/esbuild"
-  ];
-  for (const candidate of candidates) {
-    try {
-      return require.resolve(candidate);
-    } catch {
-      /* keep looking */
-    }
+  try {
+    return require.resolve("esbuild");
+  } catch {
+    throw new Error(
+      "esbuild not found - run \`pnpm install\` (esbuild is a devDependency) before building."
+    );
   }
-  throw new Error("esbuild not found — install it or point resolveEsbuild() at a copy");
 }
 
 const esbuild = require(resolveEsbuild());
 
 const JsxRuntimeImport = /^import \{ jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment \} from "react\/jsx-runtime";\n?/m;
 const NamedImport = /^import \{ ?([\s\S]*?)\s*\} from "([^"]+)";\s*$/gm;
+// Bundled esm output aggregates the entry's exports in a trailing statement.
+const ExportList = /^export \{ ?([\s\S]*?)\s*\};\s*$/gm;
 const ExportFunction = /^export function (\w+)/gm;
 const ExportConst = /^export const (\w+)/gm;
 
@@ -57,9 +63,13 @@ function rewrite(code) {
   code = code.replace(/(?<![\w$])_jsx\(/g, "(0, react_jsx_runtime.jsx)(");
   code = code.replace(/(?<![\w$])_Fragment(?!\w)/g, "react_jsx_runtime.Fragment");
 
-  // 2. named imports -> destructured requires.
+  // 2. named imports -> destructured requires. Bundling can emit the SAME
+  //    external module from several source files with per-module local names
+  //    (jsx6, jsxs6, ...), so every import gets a UNIQUE module alias and the
+  //    "let ... = require(...)" lines never collide.
+  let moduleCounter = 0;
   code = code.replace(NamedImport, (match, names, mod) => {
-    const alias = "_mod_" + mod.replace(/[^\w$]/g, "_");
+    const alias = "_mod_" + moduleCounter++;
     const bindings = names
       .split(",")
       .map((part) => part.trim())
@@ -71,7 +81,8 @@ function rewrite(code) {
     return 'let ' + alias + ' = require("' + mod + '");\nlet ' + bindings.join(", ") + ";";
   });
 
-  // 3. export forms -> plain declarations + recorded names.
+  // 3. export forms -> plain declarations (or a no-op for the aggregated
+  //    export list) + recorded names; module.exports is appended by main().
   code = code.replace(ExportFunction, (m, name) => {
     exportedNames.add(name);
     return "function " + name;
@@ -80,20 +91,32 @@ function rewrite(code) {
     exportedNames.add(name);
     return "const " + name;
   });
+  code = code.replace(ExportList, (m, names) => {
+    for (const part of names.split(",")) {
+      const name = part.trim().split(/\s+as\s+/)[0].trim();
+      if (name) exportedNames.add(name);
+    }
+    return "";
+  });
   return code;
 }
 
 async function main() {
-  const src = readFileSync(join(here, "src/client.tsx"), "utf8");
   const css = readFileSync(join(here, "src/model-provider.css"), "utf8");
-  const transformed = await esbuild.transform(src, {
-    loader: "tsx",
+  const result = await esbuild.build({
+    entryPoints: [join(here, "src/client.tsx")],
+    bundle: true,
+    write: false,
+    format: "esm",
     jsx: "automatic",
     target: "es2020",
     sourcemap: false,
     minify: false,
-    treeShaking: false
+    treeShaking: false,
+    charset: "utf8",
+    external: EXTERNAL
   });
+  const transformed = { code: result.outputFiles[0].text };
   let code = rewrite(transformed.code);
 
   const exportsLines = [...exportedNames].map((name) => "exports." + name + " = " + name + ";");

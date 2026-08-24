@@ -1,6 +1,7 @@
-/* dsh-model-provider — scoped styles for the provider-first model selector.
+/* dsh-model-provider - scoped styles for the provider-first model selector.
    Mirrors the harness model-seat visuals (menu surface, rows) using the same
-   design tokens; the three-level panes and provider-bearing parts are new. */
+   design tokens; the three-level panes, search boxes, subheads and failed
+   provider rows are new. */
 .dshmp-root{min-width:0;position:relative}
 .dshmp-trigger{min-width:0;max-width:min(360px,45cqw);height:28px;color:var(--dsw-alias-label-secondary);cursor:pointer;background:0 0;border:none;border-radius:24px;outline:none;align-items:center;gap:4px;padding:0 4px 0 8px;font-size:13px;font-weight:500;line-height:20px;display:flex}
 .dshmp-trigger:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}
@@ -13,15 +14,21 @@
 .dshmp-chevronOpen{transform:rotate(180deg)}
 .dshmp-menu{z-index:20;border:1px solid var(--dsw-alias-border-inverted);background:var(--dsw-specific-menu);width:max-content;min-width:min(240px,100vw - 32px);max-width:min(420px,100vw - 32px);max-height:min(360px,100vh - 96px);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);--dsh-scrollbar-thumb:var(--dsw-alias-scrollbar-bg-l2);--dsh-scrollbar-thumb-hover:var(--dsw-alias-scrollbar-hover-l2);border-radius:12px;flex-direction:column;padding:4px;display:flex;position:absolute;bottom:calc(100% + 8px);right:0;overflow:hidden}
 .dshmp-status,.dshmp-empty{color:var(--dsw-alias-label-tertiary);padding:10px;font-size:13px;line-height:20px}
-.dshmp-error,.dshmp-warning{background:var(--dsw-alias-interactive-bg-hover-danger);color:var(--dsw-alias-state-error-primary);border-radius:8px;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px;padding:7px 8px;font-size:12px;line-height:18px;display:flex}
-.dshmp-warning{background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-state-warn-label)}
+.dshmp-error{background:var(--dsw-alias-interactive-bg-hover-danger);color:var(--dsw-alias-state-error-primary);border-radius:8px;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px;padding:7px 8px;font-size:12px;line-height:18px;display:flex}
 .dshmp-retry{color:inherit;font:inherit;cursor:pointer;background:0 0;border:none;flex:none;padding:0;font-weight:600}
-/* three-level panes: the scrollable list takes the remaining height below the
-   back header, so the header stays put while the options scroll. */
+/* three-level panes: the header block (back + subhead + search) stays put
+   while the option list scrolls below it. */
 .dshmp-back{box-sizing:border-box;width:auto;min-width:100%;height:36px;color:var(--dsw-alias-label-secondary);cursor:pointer;text-align:left;background:0 0;border:none;border-radius:10px;align-items:center;gap:6px;padding:0 8px;font-size:13px;line-height:20px;display:flex;flex:none}
 .dshmp-back:hover:not(:disabled),.dshmp-back:focus-visible{background:var(--dsw-alias-interactive-bg-hover)}
 .dshmp-back:disabled{color:var(--dsw-alias-label-dimmed);cursor:default}
 .dshmp-backLabel{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}
+.dshmp-subhead{color:var(--dsw-alias-label-tertiary);flex:none;padding:0 10px 2px;font-size:12px;line-height:18px}
+.dshmp-searchWrap{flex:none;position:relative;display:flex;margin:2px 0 4px}
+.dshmp-searchIcon{position:absolute;left:9px;top:50%;color:var(--dsw-alias-label-tertiary);pointer-events:none;transform:translateY(-50%)}
+.dshmp-search{box-sizing:border-box;width:auto;min-width:100%;height:30px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover);border:1px solid var(--dsw-alias-border-l3);border-radius:10px;outline:none;padding:0 10px 0 30px;font:inherit;font-size:13px;line-height:18px;flex:none}
+.dshmp-search::placeholder{color:var(--dsw-alias-label-tertiary)}
+.dshmp-search:focus{border-color:var(--dsw-alias-state-business-primary)}
+.dshmp-search::-webkit-search-cancel-button{opacity:.45}
 .dshmp-groups{flex:1 1 auto;min-height:0;overflow-y:auto}
 .dshmp-option{box-sizing:border-box;width:auto;min-width:100%;min-height:38px;color:inherit;text-align:left;cursor:pointer;background:0 0;border:none;border-radius:10px;outline:none;align-items:center;gap:8px;padding:6px 8px;display:flex}
 .dshmp-option:hover:not(:disabled),.dshmp-option:focus-visible{background:var(--dsw-alias-interactive-bg-hover)}
@@ -36,6 +43,12 @@
 .dshmp-cellLabel{white-space:nowrap;flex:none}
 .dshmp-cellValue{text-overflow:ellipsis;white-space:nowrap;text-align:right;min-width:0;color:var(--dsw-alias-label-tertiary);flex:auto;overflow:hidden}
 .dshmp-cellChevron{color:var(--dsw-alias-label-tertiary);flex:none}
-/* provider pane: the active provider is pinned first and marked in the row. */
-.dshmp-providerActive{background:var(--dsw-alias-interactive-bg-active)}
+/* provider pane: the current provider is pinned first and marked by text
+   ("· 当前"), no full-row highlight - matches the harness menu surface. */
 .dshmp-providerCurrent{color:var(--dsw-alias-state-business-primary);font-weight:500}
+/* failed provider row: warning glyph + message on the left, retry on the
+   right; the whole row acts as the retry action. */
+.dshmp-failed{color:var(--dsw-alias-state-warn-label)}
+.dshmp-failedText{display:flex;align-items:center;gap:4px;color:inherit}
+.dshmp-failedIcon{flex:none}
+.dshmp-optionRetry{color:var(--dsw-alias-state-error-primary);font-size:12px;font-weight:600;flex:none;border:none;background:0 0;font:inherit;padding:0}
