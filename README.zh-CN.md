@@ -27,6 +27,9 @@ Provider-first Model Selector —— DeepSeek Harness 模型选择器插件。
                                    🔍 搜索 opencode-go 模型            └─ GLM-5.1
                                       （只搜当前供应商）
 
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/6fb97a93-43f7-4d05-b9bb-dc77273759f9" />
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/e011060a-56d9-4744-ab76-359aab52f75e" />
+
 - **Provider 单独成为一级**：Provider 列表把**当前供应商置顶**并标出「· 当前」；其余
   供应商保持目录顺序。Model 页只渲染选中供应商的模型，不再平铺 Provider × Model。
 - **失败 Provider 也是一行**：加载失败的供应商不会只出现在警告横幅里，而是作为普通
