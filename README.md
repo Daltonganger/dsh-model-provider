@@ -45,6 +45,20 @@ Try opening the dropdown (still tidy even with many models):
 | Fallback | The registration disappears on plugin unload (slots.inject effect teardown) and the original model seat is restored instantly and unchanged |
 | Namespace | Own locale dictionary `modelProvider` (zh/en) — no intrusion into harness copy |
 
+## Compatibility
+
+Verified against **DeepSeek Harness 0.1.1-rc.2** (`dsh` CLI 0.1.1-rc.2 + web frontend). The APIs this plugin depends on are unchanged across the rc.8 → rc.2 release line:
+
+| Surface | rc.2 status |
+| --- | --- |
+| Slot composition | `ctx.slots.inject(key, cb)` / `slots.register` with `priority` (ascending, lowest renders) + optional `registrant` — unchanged; same key at the same priority throws, a different priority shadows |
+| Seat contract | `conversation.input.model` (single slot, session scope): owner share `locked`, locale `t` seat, inject face `{ available, directory, load, select }` — unchanged |
+| Directory face | Shared per-session `ModelDirectory` snapshot `{ current, routable, groups, failures, status, error }` — unchanged |
+| Primitives | `IconChevronDown/Left/RightOutline14`, `IconCheck/Search/WarningOutline16`, `Toast { text, icon, anchor, onDone }` — unchanged |
+| Design tokens | `--dsw-alias-*`, `--dsw-specific-menu`, `--dsw-shadow-lv3`, `--dsh-scrollbar-*` — unchanged |
+
+`peerDependencies` now track the rc.2 line (`^0.1.1-rc.2`, same pins the first-party client packages use).
+
 The component keeps the original ModelSelect interaction baseline (shared directory & selection RPC / keyboard arrows & Esc / failure retry & Toast / effort page), only turning the **two-level flat list** into **three-level navigation**:
 
 - Trigger: model name + · Provider (muted style); "· Effort" only when a non-default effort is chosen; title and aria carry the provider too
@@ -122,17 +136,11 @@ Remove this package from `dsh.profile.bundles` (or uninstall the plugin) and res
 
 ## Roadmap
 
-Shipped (v0.3.0):
+Shipped (v0.3.1):
 
-- [x] Three-level selector: root menu → provider list → single-provider model list
-- [x] Current provider pinned to top + "· current" text mark (no full-row highlight)
-- [x] Failed provider as a retryable row (not just a banner)
-- [x] Inline search on Provider / Model pages (single-page filter, no cross-provider search)
-- [x] Model page header: ‹ provider + N-models subtitle
-- [x] "· Effort" only for non-default reasoning effort (Default hidden)
-- [x] Consistent default effort (single selectionFor construction point + test coverage)
-- [x] client.tsx split (model / components / hooks / locale)
-- [x] Build hygiene: esbuild devDependency, no machine-specific paths
+- [x] v0.3 feature set: three-level selector (root → provider → single-provider model list), current-provider pin, failed-provider retry rows, inline search on both levels, lean `Model · Provider [· Effort]` trigger, consistent default effort
+- [x] Verified against DeepSeek Harness 0.1.1-rc.2 (slot composition / seat contract / directory face / primitives / design tokens all unchanged in this line)
+- [x] `peerDependencies` aligned to `^0.1.1-rc.2`
 - [x] node --test unit tests (current-pinning / same-named models / defaultEffort / Esc stack / search filtering)
 
 Candidates:

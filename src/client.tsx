@@ -41,6 +41,10 @@ export function apply(ctx: any) {
     const models = scope.modelDirectories;
     const sessions = scope.sessions;
 
+    // slots.inject(key, callback) waits on the seat's declaration (ui-conversation
+    // declares "conversation.input.model" in its children table), installs the
+    // contribution while the declaration lives, and removes it when the plugin
+    // fiber disposes — the original harness seat reappears verbatim.
     scope.slots.inject(
       "conversation.input.model",
       () =>
@@ -49,8 +53,8 @@ export function apply(ctx: any) {
             name: "conversation.input.model",
             locale: NS,
             // Shadowing priority: the single slot renders the LOWEST priority
-            // entry, so -1 beats the harness seat (0). Remove this registration
-            // and the original seat is restored verbatim.
+            // entry, so -1 beats the harness seat (0). Same key at the same
+            // priority would throw, but a different priority shadows cleanly.
             priority: -1,
             registrant: "dsh-model-provider",
             inject: (sessionId: string) => {
@@ -68,8 +72,7 @@ export function apply(ctx: any) {
             }
           },
           ModelSelector
-        ),
-      "dsh-model-provider: composer model seat"
+        )
     );
   });
 }

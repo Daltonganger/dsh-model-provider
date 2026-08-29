@@ -53,6 +53,21 @@ Provider-first Model Selector —— DeepSeek Harness 模型选择器插件。
 | 回退 | 插件卸载（slots.inject 的 effect 销毁）时注册消失，原模型座位立即原样恢复 |
 | 命名空间 | 独立 locale 词典 modelProvider（zh/en），不侵入 Harness 文案 |
 
+## 兼容性
+
+已在 **DeepSeek Harness 0.1.1-rc.2**（`dsh` CLI 0.1.1-rc.2 + Web 前端）上验证。
+本插件依赖的公开 API 表面从 rc.8 到 rc.2 一路未变：
+
+| 表面 | rc.2 状态 |
+| --- | --- |
+| Slot 组合 | `ctx.slots.inject(key, cb)` / `slots.register`，支持 `priority`（升序、数值最小者渲染）+ 可选 `registrant` —— 未变；同名同 priority 会抛错，不同 priority 则是干净的 shadow |
+| 座位契约 | `conversation.input.model`（single slot，session scope）：owner 提供 `locked`、locale `t` 席、inject 面 `{ available, directory, load, select }` —— 未变 |
+| 目录接口 | 共享的每会话 `ModelDirectory` 快照 `{ current, routable, groups, failures, status, error }` —— 未变 |
+| 基础组件 | `IconChevronDown/Left/RightOutline14`、`IconCheck/Search/WarningOutline16`、`Toast { text, icon, anchor, onDone }` —— 未变 |
+| 设计令牌 | `--dsw-alias-*`、`--dsw-specific-menu`、`--dsw-shadow-lv3`、`--dsh-scrollbar-*` —— 未变 |
+
+`peerDependencies` 已对齐 rc.2 线（`^0.1.1-rc.2`，与 Harness 官方客户端包一致）。
+
 组件保留原 ModelSelect 的交互基线（共享目录与选择 RPC / 键盘上下键与 Esc / 失败重试与
 Toast / 推理等级页），仅把**两级平铺**改为**三级导航**：
 
@@ -140,17 +155,11 @@ Toast / 推理等级页），仅把**两级平铺**改为**三级导航**：
 
 ## Roadmap
 
-已交付（v0.3.0）：
+已交付（v0.3.1）：
 
-- [x] 三级选择器：主菜单 → Provider 列表 → 单 Provider 的 Model 列表
-- [x] 当前供应商置顶 + 「· 当前」文字标记（不做整行高亮）
-- [x] 失败 Provider 作为可重试行（不再只有横幅）
-- [x] Provider / Model 页行内搜索（单页过滤，不跨 Provider）
-- [x] Model 页头部：‹ 供应商名 + N 个模型副标题
-- [x] 触发器只在非默认推理等级时显示 · Effort（隐藏 Default）
-- [x] 统一默认推理等级（selectionFor 单一构造点 + 测试覆盖）
-- [x] 拆分 client.tsx（model / components / hooks / locale）
-- [x] 构建清理：esbuild devDependency，去掉本机硬编码路径
+- [x] v0.3 功能集：三级选择器（主菜单 → Provider → 单 Provider 的 Model 列表）、当前供应商置顶、失败 Provider 可重试行、两级行内搜索、精简的 `Model · Provider [· Effort]` 触发器、统一默认推理等级
+- [x] 已在 DeepSeek Harness 0.1.1-rc.2 上验证（Slot 组合 / 座位契约 / 目录接口 / 基础组件 / 设计令牌全线未变）
+- [x] `peerDependencies` 对齐 `^0.1.1-rc.2`
 - [x] node --test 单元测试（当前置顶 / 同名模型 / defaultEffort / Esc 栈 / 搜索过滤）
 
 候选：

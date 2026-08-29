@@ -1,7 +1,7 @@
 {
   "name": "dsh-model-provider",
-  "version": "0.3.0",
-  "description": "Provider-first model selector for the DeepSeek Harness model seat: pick a provider, then a model from that provider — current model always shows Model · Provider; search and hardening (v0.3).",
+  "version": "0.3.1",
+  "description": "Provider-first model selector for the DeepSeek Harness model seat: pick a provider, then a model from that provider — current model always shows Model · Provider; search and hardening (v0.3.1, verified against DSH 0.1.1-rc.2).",
   "keywords": [
     "deepseek-harness",
     "dsh",
@@ -46,10 +46,10 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-client-locale": "^0.1.0-rc.8",
-    "@deepseek-ai/dsh-client-runtime": "^0.1.0-rc.8",
-    "@deepseek-ai/dsh-client-ui-model-selection": "^0.1.0-rc.8",
-    "@deepseek-ai/dsh-client-ui-primitives": "^0.1.0-rc.8",
+    "@deepseek-ai/dsh-client-locale": "^0.1.1-rc.2",
+    "@deepseek-ai/dsh-client-runtime": "^0.1.1-rc.2",
+    "@deepseek-ai/dsh-client-ui-model-selection": "^0.1.1-rc.2",
+    "@deepseek-ai/dsh-client-ui-primitives": "^0.1.1-rc.2",
     "react": "^18.2.0"
   },
   "scripts": {
