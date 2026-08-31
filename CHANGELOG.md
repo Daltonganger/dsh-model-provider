@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.2 (2026-08-31)
+
+- **Install hygiene**: trim `dsh.client.inject` to the module the client
+  bundle actually consumes (`@deepseek-ai/dsh-client-ui-primitives`; react and
+  jsx-runtime are platform seeds). `dsh-client-locale`, `dsh-client-runtime`
+  and `dsh-client-ui-model-selection` were declared but never imported —
+  dead waiting edges under the 0.1.1-rc.2 loader. Matching `peerDependencies`
+  cleanup.
+- Re-wired into the `web` profile: the package link now points at
+  `/opt/dev/dsh-provider-model` (was a dangling `/data/opt/dev/` link) and the
+  plugin is back in `dsh.profile.bundles`, so its client bundle is served and
+  the composer model seat shadowing works again.
+
 ## 0.3.1 (2026-08-29)
 
 - **Compatibility**: verified against DeepSeek Harness 0.1.1-rc.2 — slot
