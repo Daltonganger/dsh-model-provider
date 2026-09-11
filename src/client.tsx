@@ -27,7 +27,11 @@ import type { Selection } from "./model/types.ts";
 // helpers from the client bundle, so keep the runtime exports unchanged.
 export { compositeKey, getModelKey, groupModelsByProvider, normalizeModel, selectionFor, sortGroupsForCurrent };
 
-/** Services this plugin's apply() reaches for (mirrors the harness convention). */
+/**
+ * The bundle dependencies this plugin is assembled with, and nothing more:
+ * the services apply() itself reaches for are named on the child fiber below,
+ * where each one actually gates a step.
+ */
 export const inject = ["locale", "sessions", "slots", "modelDirectories"];
 
 /**
@@ -37,7 +41,16 @@ export const inject = ["locale", "sessions", "slots", "modelDirectories"];
 export function apply(ctx: any) {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), "dsh-model-provider: dictionaries");
 
-  ctx.inject(["slots", "modelDirectories", "sessions"], (scope: any) => {
+  // `remote` and `remote.session` are in this list because the seat reads
+  // through them, not because it is a convenient place to list every service:
+  // `modelDirectories.directoryFor(...)` builds a harness `ModelDirectory`
+  // bound to `remote.session` (see the harness's own ui-model-selection, which
+  // injects both), and `load()` / `select()` on it are the two calls the seat
+  // makes. Without them the child fiber starts too early, the directory throws
+  // `cannot get property "remote.session" without inject` on the first call,
+  // and the seat's own `.catch` swallows it — so the picker renders empty
+  // rather than failing. The service names must be here for the child to wait.
+  ctx.inject(["slots", "modelDirectories", "sessions", "remote", "remote.session"], (scope: any) => {
     const models = scope.modelDirectories;
     const sessions = scope.sessions;
 
