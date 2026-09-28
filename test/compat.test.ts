@@ -63,21 +63,25 @@ describe("primitives import surface", () => {
   });
 });
 
-describe("menu surface material", () => {
+describe("menu surface opacity", () => {
   /**
-   * `--dsw-specific-menu` is an ALPHA fill in the 0.1.7 theme, so the seat has to
-   * pair it with the blur the theme ships for it — otherwise the pane shows the
-   * chat behind it. Guarding the pair keeps a future restyle from dropping the
-   * filter while keeping the token.
+   * `--dsw-specific-menu` is an ALPHA colour in the 0.1.7 theme
+   * (`var(--dsw-menu-surface-fill)`: 58% light / 45% dark), so a plain
+   * `background: var(--dsw-specific-menu)` renders the chat behind the pane.
+   * The fix paints that tint over the fully opaque `--dsw-alias-bg-base`
+   * (#fff / #151517). A blur alone was measured at 93 -> 16 of 255 contrast
+   * bleed behind the pane; the opaque base takes it to ~0.
    */
-  test("the menu pairs the alpha fill with the theme's backdrop filter", () => {
+  test("the menu paints the alpha tint over an opaque base", () => {
     const bundle = readFileSync(BUNDLE, "utf8");
     const rule = bundle.match(/\.dshmp-menu\{[^}]*\}/);
     assert.ok(rule, "the bundle must carry the .dshmp-menu rule");
-    assert.match(rule[0], /background:var\(--dsw-specific-menu\)/);
-    // Require the UNPREFIXED declaration: the `-webkit-` alias alone would not
-    // match a preceding `;` or `{`, so it cannot satisfy this.
-    assert.match(rule[0], /[;{]backdrop-filter:var\(--dsw-menu-backdrop-filter\)/);
+    // The opaque base is what stops the page showing through.
+    assert.match(rule[0], /background-color:var\(--dsw-alias-bg-base\)/);
+    // The theme tint is layered on top so the surface keeps the harness colour.
+    assert.match(rule[0], /background-image:linear-gradient\(var\(--dsw-specific-menu\),var\(--dsw-specific-menu\)\)/);
+    // A bare alpha fill would reopen the see-through bug.
+    assert.doesNotMatch(rule[0], /[;{]background:var\(--dsw-specific-menu\)/);
   });
 });
 

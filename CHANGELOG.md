@@ -26,12 +26,14 @@
 - **0.1.7 compatibility — the menu background read as see-through.** The theme
   turned `--dsw-specific-menu` from an opaque colour into an alpha fill in the
   0.1.7 line (`var(--dsw-alias-bg-layer-3)` → `var(--dsw-menu-surface-fill)`,
-  i.e. `#f8f9fa94` light / `#43454a73` dark), and introduced
-  `--dsw-menu-backdrop-filter: blur(40px) saturate(150%)` to go with it. Every
-  first-party menu pairs the two — the harness seat this plugin shadows renders
-  `MenuSurface`, whose material rule is exactly the fill plus that filter. The
-  seat used the fill alone, so the pane was translucent. It now applies
-  `backdrop-filter` (with a `-webkit-` alias for older Safari) the same way.
+  i.e. 58% alpha light / 45% dark; the near-opaque `#f8f9faf0` variant only
+  applies under `html[data-platform=darwin]`, which this web build never sets).
+  First-party menus pair that fill with `--dsw-menu-backdrop-filter`, but a blur
+  still shows the page through it: measured against a maximum-contrast
+  background the bleed only drops from 93/255 to 16/255. The menu now paints the
+  theme tint over the fully opaque `--dsw-alias-bg-base` (`#fff` / `#151517`),
+  which takes the bleed to ~1/255 in both light and dark while keeping the
+  harness menu colour.
 - **Regression guards** (`test/compat.test.ts`): every primitives symbol the
   bundle reads must exist in the installed version, no size-suffixed icon names
   may survive, and all four `select()` outcome shapes are covered. The first
