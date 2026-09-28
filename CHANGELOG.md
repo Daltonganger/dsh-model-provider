@@ -23,6 +23,15 @@
   into an accepted one: the menu closed with no model change and no toast. The
   new `selectionAccepted()` helper (single source of truth, shared with the
   tests) handles both shapes.
+- **0.1.7 compatibility — the menu background read as see-through.** The theme
+  turned `--dsw-specific-menu` from an opaque colour into an alpha fill in the
+  0.1.7 line (`var(--dsw-alias-bg-layer-3)` → `var(--dsw-menu-surface-fill)`,
+  i.e. `#f8f9fa94` light / `#43454a73` dark), and introduced
+  `--dsw-menu-backdrop-filter: blur(40px) saturate(150%)` to go with it. Every
+  first-party menu pairs the two — the harness seat this plugin shadows renders
+  `MenuSurface`, whose material rule is exactly the fill plus that filter. The
+  seat used the fill alone, so the pane was translucent. It now applies
+  `backdrop-filter` (with a `-webkit-` alias for older Safari) the same way.
 - **Regression guards** (`test/compat.test.ts`): every primitives symbol the
   bundle reads must exist in the installed version, no size-suffixed icon names
   may survive, and all four `select()` outcome shapes are covered. The first

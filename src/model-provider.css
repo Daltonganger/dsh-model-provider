@@ -12,7 +12,19 @@
 .dshmp-triggerEffort{color:var(--dsw-alias-label-caption);flex:none}
 .dshmp-chevron{color:var(--dsw-alias-label-caption);flex:none;transition:transform .12s}
 .dshmp-chevronOpen{transform:rotate(180deg)}
-.dshmp-menu{z-index:20;border:1px solid var(--dsw-alias-border-inverted);background:var(--dsw-specific-menu);width:max-content;min-width:min(240px,100vw - 32px);max-width:min(420px,100vw - 32px);max-height:min(360px,100vh - 96px);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);--dsh-scrollbar-thumb:var(--dsw-alias-scrollbar-bg-l2);--dsh-scrollbar-thumb-hover:var(--dsw-alias-scrollbar-hover-l2);border-radius:12px;flex-direction:column;padding:4px;display:flex;position:absolute;bottom:calc(100% + 8px);right:0;overflow:hidden}
+/* The menu fill is an ALPHA colour (--dsw-menu-surface-fill: #f8f9fa94 /
+   #43454a73). Every first-party menu pairs it with the blur that makes it read
+   as a surface - the harness seat this plugin shadows renders MenuSurface,
+   whose .material rule is exactly `background: var(--dsw-menu-surface-fill)`
+   + `backdrop-filter: var(--dsw-menu-backdrop-filter)`. Using the fill alone
+   leaves the pane see-through, which is what this rule fixes. The -webkit-
+   alias covers Safari builds that predate unprefixed backdrop-filter; it is
+   ignored where unsupported, so it cannot regress anything.
+
+   Tuning: raise alpha by overriding the fill (e.g.
+   `background: color-mix(in srgb, var(--dsw-specific-menu), transparent 0%)`)
+   or use --dsw-alias-bg-base for a fully opaque pane. */
+.dshmp-menu{z-index:20;border:1px solid var(--dsw-alias-border-inverted);background:var(--dsw-specific-menu);-webkit-backdrop-filter:var(--dsw-menu-backdrop-filter);backdrop-filter:var(--dsw-menu-backdrop-filter);width:max-content;min-width:min(240px,100vw - 32px);max-width:min(420px,100vw - 32px);max-height:min(360px,100vh - 96px);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);--dsh-scrollbar-thumb:var(--dsw-alias-scrollbar-bg-l2);--dsh-scrollbar-thumb-hover:var(--dsw-alias-scrollbar-hover-l2);border-radius:12px;flex-direction:column;padding:4px;display:flex;position:absolute;bottom:calc(100% + 8px);right:0;overflow:hidden}
 .dshmp-status,.dshmp-empty{color:var(--dsw-alias-label-tertiary);padding:10px;font-size:13px;line-height:20px}
 .dshmp-error{background:var(--dsw-alias-interactive-bg-hover-danger);color:var(--dsw-alias-state-error-primary);border-radius:8px;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px;padding:7px 8px;font-size:12px;line-height:18px;display:flex}
 .dshmp-retry{color:inherit;font:inherit;cursor:pointer;background:0 0;border:none;flex:none;padding:0;font-weight:600}

@@ -63,6 +63,24 @@ describe("primitives import surface", () => {
   });
 });
 
+describe("menu surface material", () => {
+  /**
+   * `--dsw-specific-menu` is an ALPHA fill in the 0.1.7 theme, so the seat has to
+   * pair it with the blur the theme ships for it — otherwise the pane shows the
+   * chat behind it. Guarding the pair keeps a future restyle from dropping the
+   * filter while keeping the token.
+   */
+  test("the menu pairs the alpha fill with the theme's backdrop filter", () => {
+    const bundle = readFileSync(BUNDLE, "utf8");
+    const rule = bundle.match(/\.dshmp-menu\{[^}]*\}/);
+    assert.ok(rule, "the bundle must carry the .dshmp-menu rule");
+    assert.match(rule[0], /background:var\(--dsw-specific-menu\)/);
+    // Require the UNPREFIXED declaration: the `-webkit-` alias alone would not
+    // match a preceding `;` or `{`, so it cannot satisfy this.
+    assert.match(rule[0], /[;{]backdrop-filter:var\(--dsw-menu-backdrop-filter\)/);
+  });
+});
+
 describe("select() outcome contract", () => {
   test("a refused 0.1.7 result ({ ok: false }) is a failed pick", async () => {
     assert.equal(await selectionAccepted(async () => ({ ok: false, error: { code: "session/writer-held" } })), false);
