@@ -47,17 +47,19 @@ Try opening the dropdown (still tidy even with many models):
 
 ## Compatibility
 
-Verified against **DeepSeek Harness 0.1.1-rc.2** (`dsh` CLI 0.1.1-rc.2 + web frontend). The APIs this plugin depends on are unchanged across the rc.8 → rc.2 release line:
+Verified against **DeepSeek Harness 0.1.7-rc.2** (`dsh` CLI 0.1.7-rc.2 + web frontend). Three surfaces moved in the 0.1.7 line and all three are handled here:
 
-| Surface | rc.2 status |
+| Surface | 0.1.7 status |
 | --- | --- |
 | Slot composition | `ctx.slots.inject(key, cb)` / `slots.register` with `priority` (ascending, lowest renders) + optional `registrant` — unchanged; same key at the same priority throws, a different priority shadows |
 | Seat contract | `conversation.input.model` (single slot, session scope): owner share `locked`, locale `t` seat, inject face `{ available, directory, load, select }` — unchanged |
-| Directory face | Shared per-session `ModelDirectory` snapshot `{ current, routable, groups, failures, status, error }` — unchanged |
-| Primitives | `IconChevronDown/Left/RightOutline14`, `IconCheck/Search/WarningOutline16`, `Toast { text, icon, anchor, onDone }` — unchanged |
+| Directory face | Shared per-session `ModelDirectory` snapshot `{ current, routable, groups, failures, status, pending, error }` — unchanged |
+| Directory services | `directoryFor()` reads through `remote.session`, so the seat's child fiber must inject `remote` **and** `remote.session` alongside `modelDirectories`; without them 0.1.7 throws `cannot get property "remote.session" without inject` |
+| `select()` outcome | Resolves `{ ok: true }` / `{ ok: false, error }` in 0.1.7 (0.1.1 rejected). Only `ok !== false` means the switch landed — see `selectionAccepted()` |
+| Primitives | Icons are stroke-named since `0.1.7-rc.1`: `IconChevronDown/Left/RightOutlineRegular`, `IconCheck/Search/WarningOutlineRegular`, `Toast { text, icon, anchor, onDone }`. The old size-suffixed names (`…Outline14`/`…Outline16`) are gone and arrive as `undefined` |
 | Design tokens | `--dsw-alias-*`, `--dsw-specific-menu`, `--dsw-shadow-lv3`, `--dsh-scrollbar-*` — unchanged |
 
-`peerDependencies` now track the rc.2 line (`^0.1.1-rc.2`, same pins the first-party client packages use).
+`peerDependencies` track the 0.1.7 line (`@deepseek-ai/dsh-client-ui-primitives ^0.1.7-rc.1`, the first release carrying the stroke-named icon exports).
 
 The component keeps the original ModelSelect interaction baseline (shared directory & selection RPC / keyboard arrows & Esc / failure retry & Toast / effort page), only turning the **two-level flat list** into **three-level navigation**:
 
@@ -139,9 +141,9 @@ Remove this package from `dsh.profile.bundles` (or uninstall the plugin) and res
 Shipped (v0.3.1):
 
 - [x] v0.3 feature set: three-level selector (root → provider → single-provider model list), current-provider pin, failed-provider retry rows, inline search on both levels, lean `Model · Provider [· Effort]` trigger, consistent default effort
-- [x] Verified against DeepSeek Harness 0.1.1-rc.2 (slot composition / seat contract / directory face / primitives / design tokens all unchanged in this line)
-- [x] `peerDependencies` aligned to `^0.1.1-rc.2`
-- [x] node --test unit tests (current-pinning / same-named models / defaultEffort / Esc stack / search filtering)
+- [x] Verified against DeepSeek Harness 0.1.7-rc.2 (slot composition / seat contract / directory face / design tokens unchanged; `remote.session` inject, `select()` outcome and the stroke-named icon exports adapted)
+- [x] `peerDependencies` aligned to the 0.1.7 line (`@deepseek-ai/dsh-client-ui-primitives ^0.1.7-rc.1`)
+- [x] node --test unit tests (current-pinning / same-named models / defaultEffort / Esc stack / search filtering / primitives symbol surface / `select()` outcome shapes)
 
 Candidates:
 

@@ -2,7 +2,7 @@
  * dsh-model-provider - effort pane: the current model's reasoning levels
  * plus an explicit "provider default" row when the model carries no default.
  */
-import { IconCheckOutline16 } from "@deepseek-ai/dsh-client-ui-primitives";
+import { IconCheckOutlineRegular } from "@deepseek-ai/dsh-client-ui-primitives";
 import type { EffortChoice } from "../model/types.ts";
 
 export interface EffortPaneProps {
@@ -40,7 +40,7 @@ export function EffortPane({ levels, effectiveEffort, busy, errorBlock, onPick, 
               <span className="dshmp-modelName">{level.label}</span>
               {level.description !== undefined && <span className="dshmp-description">{level.description}</span>}
             </span>
-            <span className="dshmp-check">{selected ? <IconCheckOutline16 /> : null}</span>
+            <span className="dshmp-check">{selected ? <IconCheckOutlineRegular /> : null}</span>
           </button>
         );
       })}

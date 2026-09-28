@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.3.3 (2026-09-28)
+
+- **0.1.7 compatibility — the picker rendered empty.** `ModelDirectoryResolver.directoryFor()`
+  reads through `remote.session`, and the seat's child fiber only injected
+  `slots`, `modelDirectories` and `sessions`. Under 0.1.7's service isolation the
+  call threw `cannot get property "remote.session" without inject` on first use,
+  which the seat's own `.catch` swallowed — so the menu came up empty instead of
+  failing loud. `remote` and `remote.session` are now in the child-fiber inject
+  list, matching the harness's own `ui-model-selection`.
+- **0.1.7 compatibility — the composer trigger crashed the render.**
+  `@deepseek-ai/dsh-client-ui-primitives` renamed its size-suffixed icon exports
+  to stroke-named ones in `0.1.7-rc.1` (`IconCheckOutline16` →
+  `IconCheckOutlineRegular`, `IconChevron*Outline14` → `…Regular`). A missing
+  export arrives as `undefined`, so esbuild bundled it happily and only React
+  threw at paint time. All six icons updated; `Toast` was unaffected.
+  `peerDependencies` now states `^0.1.7-rc.1`, the first release carrying those
+  names — claiming `^0.1.1-rc.2` while importing 0.1.7-only symbols was wrong.
+- **`select()` refusals were reported as successes.** `ModelDirectory.select()`
+  rejected on failure in 0.1.1 but resolves `{ ok: false }` in 0.1.7. The
+  seat's `.then(() => true, () => false)` therefore turned every refused switch
+  into an accepted one: the menu closed with no model change and no toast. The
+  new `selectionAccepted()` helper (single source of truth, shared with the
+  tests) handles both shapes.
+- **Regression guards** (`test/compat.test.ts`): every primitives symbol the
+  bundle reads must exist in the installed version, no size-suffixed icon names
+  may survive, and all four `select()` outcome shapes are covered. The first
+  guard fails on the pre-0.3.3 bundle, so this cannot come back silently.
+
 ## 0.3.2 (2026-08-31)
 
 - **Install hygiene**: trim `dsh.client.inject` to the module the client

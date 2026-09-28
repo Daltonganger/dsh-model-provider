@@ -22,6 +22,7 @@ import {
   sortGroupsForCurrent
 } from "./model/selection.ts";
 import type { Selection } from "./model/types.ts";
+import { selectionAccepted } from "./model/selection-outcome.ts";
 
 // Compatibility surface: the pre-split single-file build exported these
 // helpers from the client bundle, so keep the runtime exports unchanged.
@@ -80,7 +81,9 @@ export function apply(ctx: any) {
                   if (available) directory.load().catch(() => {});
                 },
                 select: (selection: Selection) =>
-                  available ? directory.select(selection).then(() => true, () => false) : Promise.resolve(false)
+                  available
+                    ? selectionAccepted(() => directory.select(selection) as Promise<unknown>)
+                    : Promise.resolve(false)
               };
             }
           },

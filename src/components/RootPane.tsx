@@ -1,7 +1,7 @@
 /**
  * dsh-model-provider - root pane: 模型 / 推理等级.
  */
-import { IconChevronRightOutline14 } from "@deepseek-ai/dsh-client-ui-primitives";
+import { IconChevronRightOutlineRegular } from "@deepseek-ai/dsh-client-ui-primitives";
 
 export interface RootPaneProps {
   modelLabel: string;
@@ -26,7 +26,7 @@ export function RootPane({ modelLabel, effortLabel, hasEffort, onOpenProvider, o
       >
         <span className="dshmp-cellLabel">{t("menu.model")}</span>
         <span className="dshmp-cellValue">{modelLabel}</span>
-        <IconChevronRightOutline14 className="dshmp-cellChevron" />
+        <IconChevronRightOutlineRegular className="dshmp-cellChevron" />
       </button>
       {hasEffort && (
         <button
@@ -38,7 +38,7 @@ export function RootPane({ modelLabel, effortLabel, hasEffort, onOpenProvider, o
         >
           <span className="dshmp-cellLabel">{t("menu.effort")}</span>
           <span className="dshmp-cellValue">{effortLabel}</span>
-          <IconChevronRightOutline14 className="dshmp-cellChevron" />
+          <IconChevronRightOutlineRegular className="dshmp-cellChevron" />
         </button>
       )}
     </>

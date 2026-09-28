@@ -6,9 +6,9 @@
  * different providers never collide.
  */
 import {
-  IconCheckOutline16,
-  IconChevronLeftOutline14,
-  IconSearchOutline16
+  IconCheckOutlineRegular,
+  IconChevronLeftOutlineRegular,
+  IconSearchOutlineRegular
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import { useState } from "react";
 import { compositeKey, filterModelsByQuery, isCurrentSelected } from "../model/selection.ts";
@@ -34,12 +34,12 @@ export function ModelPane({ group, current, busy, statusBlock, onPick, onBack, r
   return (
     <>
       <button type="button" className="dshmp-back" onClick={onBack}>
-        <IconChevronLeftOutline14 />
+        <IconChevronLeftOutlineRegular />
         <span className="dshmp-backLabel">{group.name}</span>
       </button>
       <div className="dshmp-subhead">{t("model.usecount", { provider: group.name, count: group.models.length })}</div>
       <div className="dshmp-searchWrap">
-        <IconSearchOutline16 className="dshmp-searchIcon" />
+        <IconSearchOutlineRegular className="dshmp-searchIcon" />
         <input
           type="search"
           className="dshmp-search"
@@ -76,7 +76,7 @@ export function ModelPane({ group, current, busy, statusBlock, onPick, onBack, r
                 <span className="dshmp-modelName">{model.name}</span>
                 {model.description !== undefined && <span className="dshmp-description">{model.description}</span>}
               </span>
-              <span className="dshmp-check">{selected ? <IconCheckOutline16 /> : null}</span>
+              <span className="dshmp-check">{selected ? <IconCheckOutlineRegular /> : null}</span>
             </button>
           );
         })}

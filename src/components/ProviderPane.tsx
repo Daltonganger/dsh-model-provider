@@ -4,10 +4,10 @@
  * action; a local search box filters both rows (no cross-provider search).
  */
 import {
-  IconChevronLeftOutline14,
-  IconChevronRightOutline14,
-  IconSearchOutline16,
-  IconWarningOutline16
+  IconChevronLeftOutlineRegular,
+  IconChevronRightOutlineRegular,
+  IconSearchOutlineRegular,
+  IconWarningOutlineRegular
 } from "@deepseek-ai/dsh-client-ui-primitives";
 import { useState } from "react";
 import { filterFailuresByQuery, filterGroupsByQuery } from "../model/selection.ts";
@@ -45,11 +45,11 @@ export function ProviderPane({
   return (
     <>
       <button type="button" className="dshmp-back" onClick={onBack}>
-        <IconChevronLeftOutline14 />
+        <IconChevronLeftOutlineRegular />
         <span className="dshmp-backLabel">{t("provider.header")}</span>
       </button>
       <div className="dshmp-searchWrap">
-        <IconSearchOutline16 className="dshmp-searchIcon" />
+        <IconSearchOutlineRegular className="dshmp-searchIcon" />
         <input
           type="search"
           className="dshmp-search"
@@ -93,7 +93,7 @@ export function ProviderPane({
                 </span>
               </span>
               <span className="dshmp-cellChevron">
-                <IconChevronRightOutline14 />
+                <IconChevronRightOutlineRegular />
               </span>
             </button>
           );
@@ -112,7 +112,7 @@ export function ProviderPane({
             <span className="dshmp-optionCopy">
               <span className="dshmp-modelName">{failure.name}</span>
               <span className="dshmp-description dshmp-failedText">
-                <IconWarningOutline16 className="dshmp-failedIcon" />
+                <IconWarningOutlineRegular className="dshmp-failedIcon" />
                 {t("provider.failed")}：{failure.message}
               </span>
             </span>

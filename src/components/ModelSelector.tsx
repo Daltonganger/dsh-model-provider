@@ -17,7 +17,7 @@
  * input-box space.
  */
 import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { IconChevronDownOutline14, IconChevronLeftOutline14, IconWarningOutline16, Toast } from "@deepseek-ai/dsh-client-ui-primitives";
+import { IconChevronDownOutlineRegular, IconChevronLeftOutlineRegular, IconWarningOutlineRegular, Toast } from "@deepseek-ai/dsh-client-ui-primitives";
 import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation.ts";
 import { findCurrentChoice, selectionFor, sortGroupsForCurrent } from "../model/selection.ts";
 import type {
@@ -269,7 +269,7 @@ export function ModelSelector({ locked, available, directory, load, select, t }:
         <span className="dshmp-triggerLabel">{modelLabel}</span>
         {providerLabel !== undefined && <span className="dshmp-triggerProvider">· {providerLabel}</span>}
         {visibleEffortLabel !== undefined && <span className="dshmp-triggerEffort">· {visibleEffortLabel}</span>}
-        <IconChevronDownOutline14 className={open ? "dshmp-chevron dshmp-chevronOpen" : "dshmp-chevron"} />
+        <IconChevronDownOutlineRegular className={open ? "dshmp-chevron dshmp-chevronOpen" : "dshmp-chevron"} />
       </button>
 
       {open && (
@@ -342,7 +342,7 @@ export function ModelSelector({ locked, available, directory, load, select, t }:
                   setPane("provider");
                 }}
               >
-                <IconChevronLeftOutline14 />
+                <IconChevronLeftOutlineRegular />
                 <span className="dshmp-backLabel">{t("menu.model")}</span>
               </button>
               <div className="dshmp-empty">{t("empty.models")}</div>
@@ -367,7 +367,7 @@ export function ModelSelector({ locked, available, directory, load, select, t }:
         <Toast
           key={toast.seq}
           text={toast.text}
-          icon={<IconWarningOutline16 />}
+          icon={<IconWarningOutlineRegular />}
           anchor={rootRef.current?.closest("[data-composer-card]") ?? null}
           onDone={() => {
             setToast(null);
